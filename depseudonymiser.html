@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dépseudonymisation — SOP Final</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      max-width: 720px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .header {
+      background: #1a6b3c;
+      color: white;
+      padding: 24px 28px;
+    }
+    .header h1 { font-size: 20px; margin-bottom: 4px; }
+    .header p { font-size: 13px; opacity: 0.75; }
+    .body { padding: 28px; }
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 6px;
+      margin-top: 20px;
+    }
+    label:first-child { margin-top: 0; }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 220px;
+      font-family: Arial, sans-serif;
+    }
+    .hint { font-size: 11px; color: #888; margin-top: 4px; }
+    .btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: #1a6b3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #145730; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .statut {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+      line-height: 1.6;
+    }
+    .statut.ok { background: #d5f5e3; color: #1e8449; display: block; }
+    .statut.err { background: #fadbd8; color: #c0392b; display: block; }
+    .statut.load { background: #fef9e7; color: #b7770d; display: block; }
+    .footer {
+      padding: 14px 28px;
+      background: #f9f9f9;
+      border-top: 1px solid #e0e0e0;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 16px;
+    }
+    .nav a {
+      color: #1a6b3c;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>✅ Dépseudonymisation — SOP Final</h1>
+      <p>Réinjecte les vraies valeurs dans le SOP généré par Claude</p>
+    </div>
+    <div class="body">
+
+      <label>Session ID</label>
+      <input type="text" id="sid" placeholder="SOP-20260429-1604">
+      <p class="hint">Le Session ID reçu lors de la pseudonymisation</p>
+
+      <label>Texte SOP généré par Claude</label>
+      <textarea id="sop" placeholder="Colle ici le texte du SOP généré par Claude (avec les placeholders [TYPE_DOC_1], [PERSONNE_1]...)"></textarea>
+      <p class="hint">Claude a utilisé les placeholders — ce formulaire les remplace par les vraies valeurs</p>
+
+      <button class="btn" id="btn" onclick="envoyer()">🔄 Dépseudonymiser et recevoir le document final</button>
+      <div class="statut" id="statut"></div>
+
+      <div class="nav">
+        <a href="/">← Retour à la pseudonymisation</a>
+      </div>
+
+    </div>
+    <div class="footer">
+      Webhook Make.com → Claude Sonnet 4.6 → Gmail isabelle.neufcourt@gmail.com
+    </div>
+  </div>
+
+  <script>
+    const DEPSEUDO_URL = '/.netlify/functions/send-to-depseudo';
+
+    async function envoyer() {
+      const sid = document.getElementById('sid').value.trim();
+      const sop = document.getElementById('sop').value.trim();
+      const statut = document.getElementById('statut');
+      const btn = document.getElementById('btn');
+
+      if (!sid) {
+        statut.className = 'statut err';
+        statut.innerText = '❌ Merci de renseigner le Session ID.';
+        return;
+      }
+      if (!sop) {
+        statut.className = 'statut err';
+        statut.innerText = '❌ Merci de coller le texte SOP généré par Claude.';
+        return;
+      }
+
+      btn.disabled = true;
+      statut.className = 'statut load';
+      statut.innerText = '⏳ Envoi en cours...';
+
+      try {
+        const res = await fetch(DEPSEUDO_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sid, texte_sop: sop })
+        });
+
+        if (res.ok) {
+          statut.className = 'statut ok';
+          statut.innerHTML = '✅ <b>Envoyé avec succès !</b><br>Vérifie ta boîte Gmail — le document final avec les vraies valeurs arrive dans quelques secondes.';
+        } else {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Erreur : ' + res.status;
+        }
+      } catch (err) {
+        statut.className = 'statut err';
+        statut.innerText = '❌ Erreur réseau : ' + err.message;
+      }
+
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>
