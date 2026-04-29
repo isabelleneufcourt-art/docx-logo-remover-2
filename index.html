@@ -192,11 +192,8 @@
         </div>
         <p class="hint" style="margin-top:8px">Le logo de l'en-tête sera supprimé et le texte extrait automatiquement</p>
 
-        <label style="margin-top:16px">URL de ta fonction Netlify</label>
-        <input class="netlify-url" type="text" id="netlifyUrl"
-               placeholder="https://TON-SITE.netlify.app/.netlify/functions/remove-logo"
-               value="">
-        <p class="hint">Déploie la fonction Netlify fournie et colle l'URL ici</p>
+        <input class="netlify-url" type="hidden" id="netlifyUrl"
+               value="https://docx-logo-remover-2.netlify.app/.netlify/functions/remove-logo">
       </div>
 
       <button class="btn" id="btn" onclick="envoyer()">🚀 Pseudonymiser et envoyer à Claude</button>
@@ -209,7 +206,7 @@
   </div>
 
   <script>
-    const WEBHOOK_URL = 'https://hook.eu1.make.com/d8ddjdwr947ntxqi6trumfj2aomdwtts';
+    const WEBHOOK_URL = '/.netlify/functions/send-to-make';
     let selectedFile = null;
     let activeTab = 'texte';
 
