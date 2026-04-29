@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pseudonymisation RGPD — SOP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      max-width: 720px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 24px 28px;
+    }
+    .header h1 { font-size: 20px; margin-bottom: 4px; }
+    .header p { font-size: 13px; opacity: 0.75; }
+    .body { padding: 28px; }
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 13px;
+      color: #333;
+      margin-bottom: 6px;
+      margin-top: 20px;
+    }
+    label:first-child { margin-top: 0; }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      margin-bottom: 12px;
+    }
+    .tab {
+      padding: 8px 18px;
+      border: 2px solid #2c3e50;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      background: white;
+      color: #2c3e50;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: #2c3e50;
+      color: white;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 180px;
+      font-family: Arial, sans-serif;
+    }
+    .upload-zone {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #2c3e50;
+      background: #f0f4f8;
+    }
+    .upload-zone input { display: none; }
+    .upload-zone .icon { font-size: 36px; margin-bottom: 8px; }
+    .upload-zone p { color: #666; font-size: 13px; }
+    .upload-zone .filename {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+    .hint { font-size: 11px; color: #888; margin-top: 4px; }
+    .btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #1a252f; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .statut {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+      line-height: 1.6;
+    }
+    .statut.ok { background: #d5f5e3; color: #1e8449; display: block; }
+    .statut.err { background: #fadbd8; color: #c0392b; display: block; }
+    .statut.load { background: #fef9e7; color: #b7770d; display: block; }
+    .footer {
+      padding: 14px 28px;
+      background: #f9f9f9;
+      border-top: 1px solid #e0e0e0;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+    }
+    .session-gen {
+      font-size: 11px;
+      color: #2c3e50;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-left: 8px;
+    }
+    .netlify-url {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>🔒 Pseudonymisation RGPD — Procédure SOP</h1>
+      <p>Anonymise automatiquement les données personnelles et marqueurs organisationnels avant envoi à Claude</p>
+    </div>
+    <div class="body">
+
+      <label>Session ID
+        <span class="session-gen" onclick="genSession()">↻ Générer</span>
+      </label>
+      <input type="text" id="sid" placeholder="SOP-20260429-001">
+      <p class="hint">Conserve-le pour la dépseudonymisation après génération du SOP</p>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('texte')">📝 Texte brut</div>
+        <div class="tab" onclick="switchTab('docx')">📄 Fichier .docx</div>
+      </div>
+
+      <!-- Onglet texte brut -->
+      <div class="tab-content active" id="tab-texte">
+        <textarea id="txt" placeholder="Colle ici le texte de ta procédure SOP..."></textarea>
+        <p class="hint">Emails nominatifs, noms, MSF, AdFinity, AFOP... seront remplacés automatiquement</p>
+      </div>
+
+      <!-- Onglet fichier .docx -->
+      <div class="tab-content" id="tab-docx">
+        <div class="upload-zone" id="dropzone" onclick="document.getElementById('fileInput').click()"
+             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <input type="file" id="fileInput" accept=".docx" onchange="fileSelected(event)">
+          <div class="icon">📂</div>
+          <p>Glisse ton fichier .docx ici<br>ou clique pour sélectionner</p>
+          <div class="filename" id="filename"></div>
+        </div>
+        <p class="hint" style="margin-top:8px">Le logo de l'en-tête sera supprimé et le texte extrait automatiquement</p>
+
+        <label style="margin-top:16px">URL de ta fonction Netlify</label>
+        <input class="netlify-url" type="text" id="netlifyUrl"
+               placeholder="https://TON-SITE.netlify.app/.netlify/functions/remove-logo"
+               value="">
+        <p class="hint">Déploie la fonction Netlify fournie et colle l'URL ici</p>
+      </div>
+
+      <button class="btn" id="btn" onclick="envoyer()">🚀 Pseudonymiser et envoyer à Claude</button>
+      <div class="statut" id="statut"></div>
+
+    </div>
+    <div class="footer">
+      Webhook Make.com → Claude Sonnet 4.6 → Gmail isabelle.neufcourt@gmail.com
+    </div>
+  </div>
+
+  <script>
+    const WEBHOOK_URL = 'https://hook.eu1.make.com/d8ddjdwr947ntxqi6trumfj2aomdwtts';
+    let selectedFile = null;
+    let activeTab = 'texte';
+
+    function genSession() {
+      const now = new Date();
+      const d = now.toISOString().slice(0,10).replace(/-/g,'');
+      const t = now.toTimeString().slice(0,5).replace(':','');
+      document.getElementById('sid').value = 'SOP-' + d + '-' + t;
+    }
+    genSession();
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'texte') || (i === 1 && tab === 'docx'));
+      });
+      document.getElementById('tab-texte').classList.toggle('active', tab === 'texte');
+      document.getElementById('tab-docx').classList.toggle('active', tab === 'docx');
+    }
+
+    function fileSelected(event) {
+      selectedFile = event.target.files[0];
+      document.getElementById('filename').textContent = selectedFile ? '✅ ' + selectedFile.name : '';
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.add('dragover');
+    }
+    function dragLeave(e) {
+      document.getElementById('dropzone').classList.remove('dragover');
+    }
+    function dropFile(e) {
+      e.preventDefault();
+      document.getElementById('dropzone').classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.docx')) {
+        selectedFile = file;
+        document.getElementById('filename').textContent = '✅ ' + file.name;
+      } else {
+        alert('Seuls les fichiers .docx sont acceptés');
+      }
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function envoyer() {
+      const sid = document.getElementById('sid').value.trim();
+      const statut = document.getElementById('statut');
+      const btn = document.getElementById('btn');
+
+      if (!sid) {
+        statut.className = 'statut err';
+        statut.innerText = '❌ Merci de renseigner un Session ID.';
+        return;
+      }
+
+      btn.disabled = true;
+      let texte_brut = '';
+
+      if (activeTab === 'texte') {
+        texte_brut = document.getElementById('txt').value.trim();
+        if (!texte_brut) {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Merci de coller le texte de la procédure.';
+          btn.disabled = false;
+          return;
+        }
+
+      } else {
+        // Mode fichier .docx
+        if (!selectedFile) {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Merci de sélectionner un fichier .docx.';
+          btn.disabled = false;
+          return;
+        }
+
+        const netlifyUrl = document.getElementById('netlifyUrl').value.trim();
+        if (!netlifyUrl) {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Merci de renseigner l\'URL de ta fonction Netlify.';
+          btn.disabled = false;
+          return;
+        }
+
+        statut.className = 'statut load';
+        statut.innerText = '⏳ Encodage du fichier .docx...';
+
+        const docx_base64 = await toBase64(selectedFile);
+
+        statut.innerText = '⏳ Suppression du logo et extraction du texte...';
+
+        try {
+          const netlifyRes = await fetch(netlifyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sid, docx_base64 })
+          });
+          const netlifyData = await netlifyRes.json();
+
+          if (!netlifyData.success) {
+            statut.className = 'statut err';
+            statut.innerText = '❌ Erreur Netlify : ' + (netlifyData.error || 'inconnue');
+            btn.disabled = false;
+            return;
+          }
+
+          texte_brut = netlifyData.texte_extrait;
+          statut.innerText = `⏳ Texte extrait (${netlifyData.nb_caracteres} caractères, ${netlifyData.images_supprimees} image(s) supprimée(s)). Envoi au webhook...`;
+
+        } catch (err) {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Erreur Netlify : ' + err.message;
+          btn.disabled = false;
+          return;
+        }
+      }
+
+      // Envoi au webhook Make
+      try {
+        statut.className = 'statut load';
+        statut.innerText = statut.innerText.includes('Envoi') ? statut.innerText : '⏳ Envoi au webhook Make...';
+
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sid, texte_brut })
+        });
+
+        if (res.ok) {
+          statut.className = 'statut ok';
+          statut.innerHTML = '✅ <b>Envoyé avec succès !</b><br>Vérifie ta boîte Gmail dans quelques secondes.<br><br>📌 Session ID à conserver : <b>' + sid + '</b>';
+        } else {
+          statut.className = 'statut err';
+          statut.innerText = '❌ Erreur webhook HTTP : ' + res.status;
+        }
+      } catch (err) {
+        statut.className = 'statut err';
+        statut.innerText = '❌ Erreur réseau : ' + err.message;
+      }
+
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>
