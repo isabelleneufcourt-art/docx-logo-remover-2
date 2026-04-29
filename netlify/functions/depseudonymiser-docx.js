@@ -67,7 +67,9 @@ exports.handler = async (event) => {
       const tableJson = record.table_json || record.data?.table_json;
       
       if (typeof tableJson === "string") {
-        tableCorrespondance = JSON.parse(tableJson);
+        // La table est stockée comme "{...}, {...}, {...}" — on l'enveloppe dans un tableau
+        const wrapped = "[" + tableJson + "]";
+        tableCorrespondance = JSON.parse(wrapped);
       } else if (Array.isArray(tableJson)) {
         tableCorrespondance = tableJson;
       }
@@ -106,7 +108,7 @@ exports.handler = async (event) => {
 
       // Remplacer chaque placeholder par sa vraie valeur
       for (const item of tableCorrespondance) {
-        const placeholder = item.placeholder || item.pseudonyme;
+        const placeholder = item.placeholder || item.pseudonyme || item.identifiant;
         const valeur = item.valeur_reelle || item.valeur_originale;
         
         if (placeholder && valeur) {
